@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.awt.print.Pageable;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -58,6 +59,16 @@ public class MessageServiceImpl implements MessageService {
         message.setChatId(chat.getId());
 
         return messageRepository.save(message);
+    }
+
+    @Override
+    public boolean hasAccessToChat(Long userId, Long chatId) {
+        Optional<Chat> chatOpt = chatService.findById(chatId);
+        if (chatOpt.isEmpty()) {
+            return false;
+        }
+        Chat chat = chatOpt.get();
+        return userId.equals(chat.getUserId()) || userId.equals(chat.getUser2Id());
     }
 
     @Override

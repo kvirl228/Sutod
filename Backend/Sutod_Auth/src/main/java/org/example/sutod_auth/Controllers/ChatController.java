@@ -2,6 +2,8 @@ package org.example.sutod_auth.Controllers;
 
 import lombok.AllArgsConstructor;
 import org.example.sutod_auth.Entities.Chat;
+import org.example.sutod_auth.Entities.DTO.ChatDTO;
+import org.example.sutod_auth.Repositories.ChatRepository;
 import org.example.sutod_auth.Servies.Impl.ChatServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/chats")
@@ -17,9 +20,22 @@ public class ChatController {
 
     private final ChatServiceImpl chatService;
 
+    private final ChatRepository chatRepository;
+
     @GetMapping("/{id}")
-    public ResponseEntity<List<Chat>> getAllChatsByUserId(@PathVariable Long id) {
-        return ResponseEntity.ok().body(chatService.findAllByUserId(id));
+    public ResponseEntity<List<ChatDTO>> getAllChatsByUserId(@PathVariable Long id) {
+        List<Chat> chats = chatService.findAllByUserId(id);
+
+        List<ChatDTO> chatDTO = chats.stream()
+                .map(chat -> chatService.convertToDto(chat, id))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(chatDTO);
+    }
+
+
+    @GetMapping
+    public ResponseEntity<List<Chat>> getAllChats() {
+        return ResponseEntity.ok(chatRepository.findAll());
     }
 
     @GetMapping("/chat/{id}")
@@ -29,8 +45,10 @@ public class ChatController {
 
     @GetMapping("/twoId")
     public ResponseEntity<Long> getAllChatsByUserIdTwoId(@RequestParam Long id1, @RequestParam Long id2) {
+        Long Id1 = Math.max(id1, id2);
+        Long Id2 = Math.min(id1, id2);
         try {
-            Long chatId = chatService.findByParticipants(id1, id2).get().getId();
+            Long chatId = chatService.findByParticipants(Id1, Id2).get().getId();
             return ResponseEntity.ok(chatId);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

@@ -17,6 +17,8 @@ public interface MessageService {
 
     Message sendMessage(Message message, Long Id);
 
+    boolean hasAccessToChat(Long userId, Long chatId);
+
     void deleteMessageById(Long Id);
 
 }

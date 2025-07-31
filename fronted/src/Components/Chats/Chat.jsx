@@ -19,7 +19,7 @@ function Chat({ userId, user2Id, username }) {
   // Получение или создание чата
   const fetchChatId = useCallback(async () => {
     try {
-      const response = await fetch(`http://localhost:8000/api/chats/twoId?id1=${userId}&id2=${user2Id}`, {
+      const response = await fetch(`http://localhost:8080/api/chats/twoId?id1=${userId}&id2=${user2Id}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem("token")}`,
         }
@@ -28,8 +28,9 @@ function Chat({ userId, user2Id, username }) {
       if (response.ok) {
         const id = await response.text();
         return id;
-      } else if (response.status === 404) {
-        const createResponse = await fetch('http://localhost:8000/api/chats', {
+      } 
+      else{
+        const createResponse = await fetch('http://localhost:8080/api/chats', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem("token")}`,
@@ -42,11 +43,13 @@ function Chat({ userId, user2Id, username }) {
         });
 
         if (createResponse.ok) {
+          alert("Хуй")
           return await createResponse.text();
         }
-        throw new Error('Failed to create chat');
+        else{
+          alert("Член")
+        }
       }
-      throw new Error('Failed to get chat');
     } catch (error) {
       console.error('Chat error:', error);
       return null;
@@ -55,7 +58,7 @@ function Chat({ userId, user2Id, username }) {
 
   // Инициализация WebSocket
   const initWebSocket = useCallback((id) => {
-    const socket = new SockJS("http://localhost:8000/ws");
+    const socket = new SockJS("http://localhost:8080/ws");
     const client = new Client({
       webSocketFactory: () => socket,
       reconnectDelay: 5000,
@@ -134,7 +137,7 @@ function Chat({ userId, user2Id, username }) {
       destination: `/app/chat.send`,
       body: JSON.stringify({
         senderId: userId,
-        chatId,
+        chatId: chatId,
         text: inputText,
         timestamp: new Date().toISOString()
       }),
@@ -190,11 +193,7 @@ function Chat({ userId, user2Id, username }) {
         </div>
       </div>
 
-      <div
-        className="messages-container"
-        onScroll={handleScroll}
-        ref={containerRef}
-      >
+      <div className="userInfo_chat" onScroll={handleScroll} ref={containerRef}>
         {isLoading && <div className="loading-indicator">Loading...</div>}
         {messages.map((msg, index) => (
           <div
@@ -209,22 +208,9 @@ function Chat({ userId, user2Id, username }) {
         ))}
       </div>
 
-      <div className="message-input-container">
-        <input
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-          placeholder="Введите сообщение"
-          className="input_chat"
-          disabled={!isConnected}
-        />
-        <button 
-          className="chat_button" 
-          onClick={sendMessage}
-          disabled={!inputText.trim() || !isConnected}
-        >
-          Отправить
-        </button>
+      <div className="push_chat">
+        <input value={inputText} onChange={(e) => setInputText(e.target.value)} placeholder="Введите сообщение" className="input_chat"/>
+        <button className="chat_button" onClick={sendMessage} disabled={!inputText.trim()}>Отправить</button>
       </div>
     </div>
   );
