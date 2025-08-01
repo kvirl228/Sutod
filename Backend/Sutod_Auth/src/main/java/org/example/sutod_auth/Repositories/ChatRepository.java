@@ -1,6 +1,8 @@
 package org.example.sutod_auth.Repositories;
 
 import org.example.sutod_auth.Entities.Chat;
+import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,4 +18,6 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
     Optional<Chat> findByParticipants(@Param("user1") Long user1, @Param("user2") Long user2);
 
     List<Chat> findAllByUserId(Long userId);
+
+    List<Chat> findAllByUser2Id(Long user2Id);
 }

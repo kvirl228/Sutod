@@ -26,6 +26,16 @@ public class ChatController {
     public ResponseEntity<List<ChatDTO>> getAllChatsByUserId(@PathVariable Long id) {
         List<Chat> chats = chatService.findAllByUserId(id);
 
+        if (chats.isEmpty()){
+            List<Chat> chats2 = chatRepository.findAllByUser2Id(id);
+            if (!chats2.isEmpty()){
+                List<ChatDTO> chatDTO = chats.stream()
+                        .map(chat -> chatService.convertToDto(chat, id))
+                        .toList();
+                return ResponseEntity.ok(chatDTO);
+            }
+        };
+
         List<ChatDTO> chatDTO = chats.stream()
                 .map(chat -> chatService.convertToDto(chat, id))
                 .collect(Collectors.toList());
@@ -60,7 +70,6 @@ public class ChatController {
         if(chat.getUserId()==null || chat.getUser2Id()==null){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-        System.out.println("POST /api/chats called with: " + chat);
         return ResponseEntity.ok(chatService.createChat(chat));
     }
 

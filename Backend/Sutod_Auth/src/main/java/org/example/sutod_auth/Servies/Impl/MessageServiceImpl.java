@@ -43,20 +43,15 @@ public class MessageServiceImpl implements MessageService {
         Long id2 = Math.min(message.getSenderId(), Id);
 
         Chat chat;
+        chat = chatService.findByParticipants(id1, id2).orElseGet(() -> {
+            Chat newChat = new Chat();
+            newChat.setUserId(id1);
+            newChat.setUser2Id(id2);
+            return chatService.createChat(newChat);
+        });
 
-        if(message.getChatId()!=null){
-            chat = chatService.findById(id1).get();
-        }
-        else{
-            chat = chatService.findByParticipants(message.getSenderId(), Id).orElseGet(() -> {
-                // Если нет — создаём
-                Chat newChat = new Chat();
-                newChat.setUserId(message.getSenderId());
-                newChat.setUser2Id(Id);
-                return chatService.createChat(newChat);
-            });
-        }
         message.setChatId(chat.getId());
+        message.setTimestamp(LocalDateTime.now());
 
         return messageRepository.save(message);
     }

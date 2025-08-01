@@ -26,6 +26,10 @@ public class ChatServiceImpl implements ChatService {
             throw new IllegalArgumentException("id is null");
         }
 
+        if(chatRepository.findAllByUserId(id) == null){
+            return chatRepository.findAllByUser2Id(id);
+        }
+
         return chatRepository.findAllByUserId(id);
     }
 

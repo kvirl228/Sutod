@@ -1,217 +1,159 @@
-import { useEffect, useState, useRef, useCallback } from "react";
-import SockJS from 'sockjs-client';
-import { Client } from '@stomp/stompjs';
+import { useEffect, useState} from "react";
 import './Chat.css';
 
 function Chat({ userId, user2Id, username }) {
   const [messages, setMessages] = useState([]);
-  const [chatId, setChatId] = useState(null);
   const [inputText, setInputText] = useState('');
-  const [hasMore, setHasMore] = useState(true);
-  const [isConnected, setIsConnected] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isClick, setIsClick] = useState(true)
+  const [deleteId, setDeleteId] = useState(0)
 
-  const clientRef = useRef(null);
-  const isFirstLoad = useRef(true);
-  const containerRef = useRef(null);
-  const pageRef = useRef(0);
-
-  // Получение или создание чата
-  const fetchChatId = useCallback(async () => {
+  const refreshToken = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/api/chats/twoId?id1=${userId}&id2=${user2Id}`, {
+      const response = await fetch("http://localhost:8080/auth/refresh", {
+                  method: "POST",
+                  credentials: "include",
+                  headers: { "Content-Type": "application/json" }
+              });
+
+              if (response.ok) {
+                  const token = await response.text()
+                  localStorage.setItem("token", token)
+                  return true
+              }
+              
+              return false
+          } catch (error) {
+              
+              return false
+          }
+  }
+  
+  const subscribe = async () => {
+    
+    try {
+      const response = await fetch(`http://localhost:8080/api/messages/twoId?id1=${userId}&id2=${user2Id}`, {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem("token")}`,
-        }
-      });
-
-      if (response.ok) {
-        const id = await response.text();
-        return id;
-      } 
-      else{
-        const createResponse = await fetch('http://localhost:8080/api/chats', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem("token")}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            userId,
-            user2Id
-          })
+          'Content-Type': 'application/json'
+        },
         });
-
-        if (createResponse.ok) {
-          alert("Хуй")
-          return await createResponse.text();
+            
+        if (response.ok) {
+            const data = await response.json();
+            setMessages([])
+            setMessages(prevMessages => [...prevMessages, ...data]);
+            setTimeout(() => {
+              subscribe()
+            }, 1500)
+            
+        } 
+        else if (response.status === 401) {
+            if (await refreshToken()) {
+              return await subscribe()
+            }
         }
         else{
-          alert("Член")
+          console.log("dsfads")
         }
+      } 
+      catch (error) {
+        setTimeout(() => {
+          subscribe()
+        }, 1)
       }
-    } catch (error) {
-      console.error('Chat error:', error);
-      return null;
-    }
-  }, [userId, user2Id]);
+  }
 
-  // Инициализация WebSocket
-  const initWebSocket = useCallback((id) => {
-    const socket = new SockJS("http://localhost:8080/ws");
-    const client = new Client({
-      webSocketFactory: () => socket,
-      reconnectDelay: 5000,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
-      connectHeaders: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`
-      },
-      onConnect: () => {
-        setIsConnected(true);
-        console.log("WebSocket connected");
-
-        client.subscribe(`/topic/chat/${id}`, (message) => {
-          const msg = JSON.parse(message.body);
-          setMessages(prev => [...prev, msg]);
-        });
-
-        // Подписка на персональные уведомления
-        client.subscribe(`/user/queue/errors`, (message) => {
-          console.error('Error:', message.body);
-        });
-      },
-      onDisconnect: () => {
-        setIsConnected(false);
-      },
-      onStompError: (frame) => {
-        console.error('Broker error:', frame.headers['message']);
-      }
-    });
-
-    client.activate();
-    clientRef.current = client;
-
-    return () => {
-      client.deactivate();
-    };
-  }, []);
-
-  // Загрузка сообщений
-  const loadMessages = useCallback(async (id, beforeTimestamp = null) => {
-    setIsLoading(true);
+  const sendMessage = async () => {
     try {
-      let url = `http://localhost:8080/api/messages/${beforeTimestamp ? 'load' : 'last'}/${id}`;
-      if (beforeTimestamp) {
-        url += `?before=${beforeTimestamp}`;
-      }
-
-      const res = await fetch(url, {
+      const response = await fetch(`http://localhost:8080/api/messages/send/${user2Id}`, {
+        method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem("token")}`
-        }
+          'Authorization': `Bearer ${localStorage.getItem("token")}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: inputText,
+          senderId: userId,
+        })
       });
+
       
-      if (res.ok) {
-        const data = await res.json();
-        if (beforeTimestamp) {
-          setMessages(prev => [...data, ...prev]);
-          if (data.length === 0) setHasMore(false);
-        } else {
-          setMessages(data);
+      if(response.ok){
+            const message = await response.json()
+            const newMessage = [...messages, message]
+            setMessages(newMessage)
         }
-        pageRef.current += 1;
-      }
+        else{
+            alert("Eror")
+        }
     } catch (error) {
-      console.error("Ошибка загрузки сообщений:", error);
-    } finally {
-      setIsLoading(false);
+      console.error('Ошибка:', error);
     }
-  }, []);
 
-  // Отправка сообщения
-  const sendMessage = useCallback(() => {
-    if (!inputText.trim() || !isConnected) return;
+    setInputText('')
+  }
 
-    clientRef.current.publish({
-      destination: `/app/chat.send`,
-      body: JSON.stringify({
-        senderId: userId,
-        chatId: chatId,
-        text: inputText,
-        timestamp: new Date().toISOString()
-      }),
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`
-      }
-    });
+  const deleteMessage = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/messages/${id}`, {
+                  method: "DELETE",
+                  headers: { 
+                    'Authorization': `Bearer ${localStorage.getItem("token")}`,
+                    "Content-Type": "application/json" 
+                  }
+              });
 
-    setInputText('');
-  }, [inputText, isConnected, chatId, userId]);
+              if (response.ok) {
+                  setIsClick(true)
+                  subscribe()
+              }
+              
+              return false
+          } catch (error) {
+              
+              return false
+          }
+  }
 
-  // Основной эффект инициализации
+  const click = (clicker, id) => {
+    setIsClick(clicker)
+    setDeleteId(id)
+  }
+
   useEffect(() => {
-    const initChat = async () => {
-      const id = await fetchChatId();
-      if (id) {
-        setChatId(id);
-        initWebSocket(id);
-        loadMessages(id);
-      }
-    };
+    subscribe()
+  }, [])
 
-    initChat();
-
-    return () => {
-      if (clientRef.current) {
-        clientRef.current.deactivate();
-      }
-    };
-  }, [fetchChatId, initWebSocket, loadMessages]);
-
-  // Подгрузка старых сообщений при скролле
-  const handleScroll = useCallback(() => {
-    if (containerRef.current.scrollTop === 0 && !isLoading && hasMore && messages.length > 0) {
-      loadMessages(chatId, messages[0].timestamp);
-    }
-  }, [isLoading, hasMore, messages, chatId, loadMessages]);
-
-  // Автоскролл при новых сообщениях
-  useEffect(() => {
-    if (containerRef.current && !isFirstLoad.current) {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight;
-    }
-    isFirstLoad.current = false;
-  }, [messages]);
 
   return (
     <div className="chat-container">
       <div className="userInfo_chat">
         <div className="userName_chat">{username}</div>
         <div className="connection-status">
-          {isConnected ? 'Online' : 'Connecting...'}
+          
         </div>
       </div>
 
-      <div className="userInfo_chat" onScroll={handleScroll} ref={containerRef}>
-        {isLoading && <div className="loading-indicator">Loading...</div>}
+      <div className="messages-container">
         {messages.map((msg, index) => (
-          <div
-            key={`${msg.timestamp}-${index}`}
-            className={msg.senderId === userId ? 'my-message' : 'their-message'}
-          >
-            <div className="message-content">{msg.text}</div>
-            <div className="message-time">
-              {new Date(msg.timestamp).toLocaleTimeString()}
-            </div>
+          <div key={`${msg.timestamp}-${index}`} className={msg.senderId === userId ? 'my_message' : 'their_message'}>
+            <div className="message-content" onClick={() => click(!isClick, msg.id)}>{msg.message}</div>
           </div>
         ))}
       </div>
 
-      <div className="push_chat">
-        <input value={inputText} onChange={(e) => setInputText(e.target.value)} placeholder="Введите сообщение" className="input_chat"/>
-        <button className="chat_button" onClick={sendMessage} disabled={!inputText.trim()}>Отправить</button>
-      </div>
+      {isClick ?
+        <div className="push_chat">
+          <input value={inputText} onChange={(e) => setInputText(e.target.value)} placeholder="Введите сообщение" className="input_chat"/>
+          <button className="chat_button" onClick={sendMessage} disabled={!inputText.trim()}>Отправить</button>
+        </div>
+        :
+        <div>
+          <button className="chat_button" onClick={() => deleteMessage(deleteId)}>удалить</button>
+        </div>
+      }
+      
     </div>
   );
 }
