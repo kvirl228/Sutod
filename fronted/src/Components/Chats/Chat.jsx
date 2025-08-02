@@ -3,9 +3,15 @@ import './Chat.css';
 
 function Chat({ userId, user2Id, username }) {
   const [messages, setMessages] = useState([]);
+
   const [inputText, setInputText] = useState('');
+  const [changeInputText, setChangeInputText] = useState('')
+
   const [isClick, setIsClick] = useState(true)
+  const [isSender, setIsSender] = useState(true)
+
   const [deleteId, setDeleteId] = useState(0)
+  const [senderId, setSenderId] = useState(0)
 
   const refreshToken = async () => {
     try {
@@ -41,8 +47,7 @@ function Chat({ userId, user2Id, username }) {
             
         if (response.ok) {
             const data = await response.json();
-            setMessages([])
-            setMessages(prevMessages => [...prevMessages, ...data]);
+            setMessages(data.reverse());
             setTimeout(() => {
               subscribe()
             }, 1500)
@@ -80,9 +85,7 @@ function Chat({ userId, user2Id, username }) {
 
       
       if(response.ok){
-            const message = await response.json()
-            const newMessage = [...messages, message]
-            setMessages(newMessage)
+            subscribe()
         }
         else{
             alert("Eror")
@@ -116,9 +119,44 @@ function Chat({ userId, user2Id, username }) {
           }
   }
 
-  const click = (clicker, id) => {
-    setIsClick(clicker)
+  const changeMessage = async (id, sender, message) => {
+    if (sender == userId){
+      try {
+        const response = await fetch(`http://localhost:8080/api/messages/change/${id}`, {
+          method: "PATCH",
+          headers: { 
+            'Authorization': `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json" 
+          },
+          body: JSON.stringify({message: message})
+        });
+        if (response.ok) {
+            setIsClick(true)
+            subscribe()
+        }
+      } catch (error) {
+        console.log("eror")
+      }
+    }
+    else{
+      setIsClick(true)
+      alert("Это не ваше сообщение")
+    }
+  } 
+
+  const click = (clicker, id, msg, sender) => {
+    
+    setChangeInputText(msg)
+    setSenderId(sender)
     setDeleteId(id)
+
+    if(sender == userId){
+      setIsClick(clicker)
+      setIsSender(true)
+    }
+    else{
+      setIsSender(false)
+    }
   }
 
   useEffect(() => {
@@ -138,7 +176,7 @@ function Chat({ userId, user2Id, username }) {
       <div className="messages-container">
         {messages.map((msg, index) => (
           <div key={`${msg.timestamp}-${index}`} className={msg.senderId === userId ? 'my_message' : 'their_message'}>
-            <div className="message-content" onClick={() => click(!isClick, msg.id)}>{msg.message}</div>
+            <div className="message-content" onClick={() => click(!isClick, msg.id, msg.message, msg.senderId)}>{msg.message}</div>
           </div>
         ))}
       </div>
@@ -149,9 +187,17 @@ function Chat({ userId, user2Id, username }) {
           <button className="chat_button" onClick={sendMessage} disabled={!inputText.trim()}>Отправить</button>
         </div>
         :
-        <div>
-          <button className="chat_button" onClick={() => deleteMessage(deleteId)}>удалить</button>
+        isSender ?
+        <div className="push_chat">
+          
+          <div>
+            <input value={changeInputText} onChange={(e) => setChangeInputText(e.target.value)} className="input_change_chat"/>
+            <button onClick={() => changeMessage(deleteId, senderId, changeInputText)} className="chat_button">изменить</button>
+            <button className="chat_button" onClick={() => deleteMessage(deleteId)}>удалить</button>
+          </div>
         </div>
+        :
+        <></>
       }
       
     </div>

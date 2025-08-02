@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import java.awt.print.Pageable;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface MessageService {
 
@@ -14,6 +15,8 @@ public interface MessageService {
     List<Message> findTop50ByChatIdOrderByTimestampDesc(Long chatId);
 
     List<Message> findNext50ByChatIdBefore(Long chatId, LocalDateTime before, Pageable pageable);
+
+    Optional<Message> findById(Long id);
 
     Message sendMessage(Message message, Long Id);
 

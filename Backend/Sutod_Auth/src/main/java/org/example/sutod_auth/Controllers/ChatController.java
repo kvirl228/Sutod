@@ -29,10 +29,11 @@ public class ChatController {
         if (chats.isEmpty()){
             List<Chat> chats2 = chatRepository.findAllByUser2Id(id);
             if (!chats2.isEmpty()){
-                List<ChatDTO> chatDTO = chats.stream()
+                List<ChatDTO> chatDTO = chats2.stream()
                         .map(chat -> chatService.convertToDto(chat, id))
                         .toList();
                 return ResponseEntity.ok(chatDTO);
+
             }
         };
 

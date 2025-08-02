@@ -4,14 +4,18 @@ import lombok.RequiredArgsConstructor;
 import org.example.sutod_auth.Entities.Chat;
 import org.example.sutod_auth.Entities.Message;
 import org.example.sutod_auth.Entities.User;
+import org.example.sutod_auth.Repositories.MessageRepository;
 import org.example.sutod_auth.Repositories.UserRepository;
 import org.example.sutod_auth.Servies.Impl.ChatServiceImpl;
 import org.example.sutod_auth.Servies.Impl.MessageServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/messages")
@@ -19,6 +23,8 @@ import java.util.List;
 public class MessageController {
 
     private final MessageServiceImpl messageService;
+
+    private final MessageRepository messageRepository;
 
     private final UserRepository userRepository;
 
@@ -61,8 +67,22 @@ public class MessageController {
         return ResponseEntity.status(HttpStatus.CREATED).body(messageSaved);
     }
 
-    @DeleteMapping("/{id}")
+    @PatchMapping("/change/{id}")
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody Map<String, String> msg) {
 
+        String message = msg.get("message");
+
+        if(message == null || message.trim().equals("")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("message is empty");
+        }
+
+        Message message1 = messageService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        message1.setMessage(message);
+        return ResponseEntity.ok(messageRepository.save(message1));
+    }
+
+    @DeleteMapping("/{id}")
     public ResponseEntity<?>  deleteMessageById(@PathVariable Long id) {
         messageService.deleteMessageById(id);
         return ResponseEntity.ok().build();

@@ -20,6 +20,7 @@ function Chats() {
         if (e.target.value.trim() === '') {
             setSearchCheck(true)
         }
+
     }
 
     const toSettings = () => navigate("/settings")

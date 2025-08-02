@@ -37,6 +37,11 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
+    public Optional<Message> findById(Long id) {
+        return messageRepository.findById(id);
+    }
+
+    @Override
     public Message sendMessage(Message message, Long Id) {
 
         Long id1 = Math.max(message.getSenderId(), Id);
