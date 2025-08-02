@@ -15,20 +15,22 @@ function Chats() {
     const [userInfo, setUserInfo] = useState([])
     const [userChats, setUserChats] = useState([])
 
-    const handleChange = (e) => {
+    const handleChange = async (e) => {
         setSearch(e.target.value)
         if (e.target.value.trim() === '') {
             setSearchCheck(true)
+            await getAllChats(userid)
         }
 
     }
 
     const toSettings = () => navigate("/settings")
 
-    const clickChat = (value, id, name) => {
+    const clickChat = async (value, id, name) => {
         setIsClick(!value)
         setUser2Id(id)
         setUsername(name)
+        await getAllChats(userid)
     }
 
     const refreshToken = async () => {
@@ -134,9 +136,11 @@ function Chats() {
         const init = async () => {
             const id = await getUserId()
             if (id) {
+                await getUserId()
                 await getAllChats(id)
             }
         }
+        
         init()
     }, [])
 

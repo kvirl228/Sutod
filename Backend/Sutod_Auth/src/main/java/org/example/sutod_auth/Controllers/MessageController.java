@@ -84,7 +84,17 @@ public class MessageController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?>  deleteMessageById(@PathVariable Long id) {
+        Long chatId = messageService.findById(id).get().getChatId();
+
         messageService.deleteMessageById(id);
-        return ResponseEntity.ok().build();
+
+        if(messageService.findAllByChatId(chatId).isEmpty()){
+            chatService.deleteChatById(chatId);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        else{
+            return ResponseEntity.ok().build();
+        }
+
     }
 }

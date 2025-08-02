@@ -109,6 +109,7 @@ function Chat({ userId, user2Id, username }) {
 
               if (response.ok) {
                   setIsClick(true)
+                  setMessages([])
                   subscribe()
               }
               
