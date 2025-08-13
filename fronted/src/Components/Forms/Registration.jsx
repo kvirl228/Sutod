@@ -22,7 +22,6 @@ function Registration(){
 
     const handleChangePassword = (event) => {
         setPassword(event.target.value)
-        
     } 
 
   const handleSubmit = async (e) => {

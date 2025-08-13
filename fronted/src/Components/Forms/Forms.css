@@ -3,6 +3,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    font-family: corbel, sans-serif ;
     background-color: #3A3F57;
 }
 .forms{
@@ -35,6 +36,7 @@
     display: flex;
     margin-top: 15px;
     flex-direction: column;
+    
 }
 .form_label{
     margin-bottom: 5px;
@@ -60,10 +62,12 @@
     border: 0px;
     color: white;
     margin-top: 15px;
+    font-size: 20px;
+    cursor: pointer;
 }
 .little_form_text{
     color: rgb(255, 255, 255, 0.5);
-    margin-top: 5px;
+    margin-top: 17px;
     font-size: 20px;
 }
 

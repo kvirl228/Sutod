@@ -5,7 +5,7 @@ import org.example.sutod_auth.Entities.User;
 import org.example.sutod_auth.Entities.UserDTO.UserAnswer;
 import org.example.sutod_auth.Jwt.JwtCore;
 import org.example.sutod_auth.Repositories.UserRepository;
-import org.example.sutod_auth.Servies.Impl.UserServiceImpl;
+import org.example.sutod_auth.Services.Impl.UserServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -121,4 +121,15 @@ public class UserController {
 
     }
 
+    @PostMapping("/{userId}/groups/{groupId}")
+    public ResponseEntity<?> addUserToGroup(@PathVariable Long userId, @PathVariable Long groupId) {
+        userService.addUserToGroup(userId, groupId);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{userId}/groups/{groupId}")
+    public ResponseEntity<?> removeUserFromGroup(@PathVariable Long userId, @PathVariable Long groupId) {
+        userService.removeUserFromGroup(userId, groupId);
+        return ResponseEntity.ok().build();
+    }
 }

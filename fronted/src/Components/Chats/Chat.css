@@ -185,7 +185,6 @@
 .my_message {
   align-self: flex-end;
   margin-left: auto;
-  
   margin-bottom: 8px;
 }
 
@@ -199,7 +198,7 @@
 
 .their_message {
   align-self: flex-start;
-  margin-right: 0;
+  margin-right: auto;
   margin-bottom: 8px;
 }
 
@@ -207,15 +206,4 @@
   background: white;
   color: #333;
   border-bottom-left-radius: 4px;
-}
-
-.input_change_chat{
-    margin-left: 10px;
-    height: 50px;
-    width: 70%;
-    border: 2px solid #D61C4E;
-    border-radius: 20px;
-    background-color: #3A3F57;
-    color: white;
-    font-size: 20px;
 }

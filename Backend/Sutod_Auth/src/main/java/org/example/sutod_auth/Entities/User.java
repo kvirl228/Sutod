@@ -6,6 +6,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -15,6 +19,7 @@ import lombok.NoArgsConstructor;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     Long id;
 
     @Column(name = "c_username")
@@ -28,5 +33,14 @@ public class User {
 
     @Column(name = "c_is_online")
     boolean is_online;
+
+    @ManyToMany
+    @JoinTable(
+            name = "groups_users",
+            schema = "app_schema",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "group_id")
+    )
+    private Set<Group> groupList = new HashSet<>();
 }
 

@@ -5,8 +5,11 @@ function Settings(props){
 
     const [name, setName] = useState('')
     const [password, setPassword] = useState('')
-    const [newPassword, setNePassword] = useState('')
+    const [newPassword, setNewPassword] = useState('')
+    const [userid, setuserId] = useState(-1)
+    const [userChats, setUserChats] = useState([])
 
+    
     const[user, setUser] = useState([])
     const navigate = useNavigate()
 
@@ -21,7 +24,7 @@ function Settings(props){
     }
 
     const handleChangeNewPassword = (event) => {
-        setNePassword(event.target.value)
+        setNewPassword(event.target.value)
     }
 
     async function refresh(){
@@ -45,16 +48,44 @@ function Settings(props){
       }
     }
 
-    async function chageUsername () {
+    const getUserId = async () => {
         try {
-        const response = await fetch(`http://localhost:8080/api/users/${props.userId}/username`, {
+            const response = await fetch(`http://localhost:8080/api/users/id/${localStorage.getItem("token")}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem("token")}`,
+                    'Content-Type': 'application/json'
+                },
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                setuserId(data)
+                return data
+            } else if (response.status === 401) {
+                if (await refresh()) {
+                    return await getUserId()
+                }
+            }
+            return null
+        } catch (error) {
+            console.error('Ошибка:', error);
+            return null
+        }
+    }
+
+    async function changeUsername () {
+        try {
+            console.log(userid)
+        const response = await fetch(`http://localhost:8080/api/users/${userid}/username`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem("token")}`
             },
             body: JSON.stringify({username: name}),
-            mode: 'cors'
+            // mode: 'cors'
+            
         });
 
         if(response.ok){
@@ -62,7 +93,7 @@ function Settings(props){
             alert("YRAAAAAAAAA")
         }
         else{
-            alert("Eror")
+            alert("Error")
         }
         } catch (error) {
             console.error('Ошибка:', error);
@@ -96,6 +127,13 @@ function Settings(props){
         }
     }
 
+    useEffect(() => {
+        const init = async () => {
+            const id = await getUserId()
+        }
+        init()
+    }, [])
+
     function toChats(){
         navigate('/chats')
     }
@@ -107,7 +145,7 @@ function Settings(props){
                 <div className="form_block">
                     <label className="form_label">Имя</label>
                     <input className="form_input" value = {name} onChange={handleChangeName} placeholder="Введите новое имя"/>
-                    <button className="form_btn" onClick={() => chageUsername()} >Изменить</button>
+                    <button className="form_btn" onClick={(e) => { e.preventDefault(); changeUsername(); }} >Изменить</button>
                     {isUsername}
                 </div>
                 <div className="form_block">
