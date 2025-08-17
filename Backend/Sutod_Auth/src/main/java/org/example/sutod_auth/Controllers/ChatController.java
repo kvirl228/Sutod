@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import org.example.sutod_auth.Entities.Chat;
 import org.example.sutod_auth.Entities.DTO.ChatDTO;
 import org.example.sutod_auth.Repositories.ChatRepository;
-import org.example.sutod_auth.Servies.Impl.ChatServiceImpl;
+import org.example.sutod_auth.Services.Impl.ChatServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +29,7 @@ public class ChatController {
         if (chats.isEmpty()){
             List<Chat> chats2 = chatRepository.findAllByUser2Id(id);
             if (!chats2.isEmpty()){
-                List<ChatDTO> chatDTO = chats.stream()
+                List<ChatDTO> chatDTO = chats2.stream()
                         .map(chat -> chatService.convertToDto(chat, id))
                         .toList();
                 return ResponseEntity.ok(chatDTO);

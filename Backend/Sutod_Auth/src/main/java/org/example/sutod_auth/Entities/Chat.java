@@ -5,9 +5,10 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Reference;
 
 @Entity
-@Table(name = "chat", schema = "app_schema")
+@Table(name = "chats", schema = "app_schema")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -15,11 +16,14 @@ public class Chat {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     Long id;
 
-    @Column(name = "c_userid")
+    @Reference
+    @Column(name = "c_user_id")
     private Long userId;
 
-    @Column(name = "c_user2id")
+    @Reference
+    @Column(name = "c_user_id_2")
     private Long user2Id;
 }

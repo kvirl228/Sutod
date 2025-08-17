@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Reference;
 
 import java.time.LocalDateTime;
 
@@ -16,15 +17,18 @@ public class Message {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
-    @Column(name = "c_message")
+    @Column(name = "c_message_text")
     private String message;
 
-    @Column(name = "c_senderid")
+    @Reference
+    @Column(name = "c_sender_id")
     private Long senderId;
 
-    @Column(name = "c_chatid")
+    @Reference
+    @Column(name = "c_chat_id")
     private Long chatId;
 
     @Column(name = "c_timestamp")

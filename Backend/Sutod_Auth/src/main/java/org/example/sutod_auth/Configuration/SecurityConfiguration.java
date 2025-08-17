@@ -3,7 +3,7 @@ package org.example.sutod_auth.Configuration;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.sutod_auth.Jwt.TokenFilter;
-import org.example.sutod_auth.Servies.Impl.UserService;
+import org.example.sutod_auth.Services.Impl.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -82,6 +82,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authorize -> authorize
 
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/api/users/avatar").permitAll()
                         .requestMatchers("/api/**").fullyAuthenticated()
                         .anyRequest().permitAll()
                 )

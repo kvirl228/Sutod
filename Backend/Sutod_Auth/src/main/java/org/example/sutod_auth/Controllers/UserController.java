@@ -1,11 +1,16 @@
 package org.example.sutod_auth.Controllers;
 
 import lombok.AllArgsConstructor;
+import org.example.sutod_auth.Entities.DTO.AvatarDTO;
+import org.example.sutod_auth.Entities.DTO.ContactDTO;
+import org.example.sutod_auth.Entities.DTO.UserDTO;
 import org.example.sutod_auth.Entities.User;
 import org.example.sutod_auth.Entities.UserDTO.UserAnswer;
 import org.example.sutod_auth.Jwt.JwtCore;
 import org.example.sutod_auth.Repositories.UserRepository;
-import org.example.sutod_auth.Servies.Impl.UserServiceImpl;
+import org.example.sutod_auth.Services.Impl.UserServiceImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -13,7 +18,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
@@ -27,6 +35,8 @@ public class UserController {
     private UserRepository userRepository;
 
     private PasswordEncoder passwordEncoder;
+
+    private final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @GetMapping("/user")
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
@@ -58,7 +68,7 @@ public class UserController {
 
     @GetMapping("/user/{id}")
     public ResponseEntity<?> getUserById(@PathVariable Long id) {
-        User user = userService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));;
+        User user = userService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         UserAnswer userAnswer = new UserAnswer(user.getUsername(), user.getId());
         return ResponseEntity.ok().body(userAnswer);
     }
@@ -70,7 +80,7 @@ public class UserController {
 
     @PutMapping
     public ResponseEntity<?> updateUser(@RequestBody User user) {
-        if(user.getUsername() == null || user.getUsername().equals("") || user.getPassword() == null || user.getPassword().equals("")) {
+        if(user.getUsername() == null || user.getUsername().isEmpty() || user.getPassword() == null || user.getPassword().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username or password is empty");
         }
         return ResponseEntity.ok(userRepository.save(user));
@@ -81,7 +91,7 @@ public class UserController {
 
         String username = userName.get("username");
 
-        if(username == null || username.trim().equals("")) {
+        if(username == null || username.trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username is empty");
         }
 
@@ -106,7 +116,7 @@ public class UserController {
 
         String password2 = passwords.get("password2");
 
-       if(password1 == null || password1.equals("") || password2 == null || password2.equals("") || password1.equals(password2)) {
+       if(password1 == null || password1.isEmpty() || password2 == null || password2.isEmpty() || password1.equals(password2)) {
         return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username or password is empty");
        }
 
@@ -121,4 +131,57 @@ public class UserController {
 
     }
 
+    @PostMapping("/{userId}/groups/{groupId}")
+    public ResponseEntity<?> addUserToGroup(@PathVariable Long userId, @PathVariable Long groupId) {
+        userService.addUserToGroup(userId, groupId);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{userId}/groups/{groupId}")
+    public ResponseEntity<?> removeUserFromGroup(@PathVariable Long userId, @PathVariable Long groupId) {
+        userService.removeUserFromGroup(userId, groupId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/contacts/add")
+    public ResponseEntity<?> addUserToContacts(@RequestBody ContactDTO contactDTO) {
+        userService.addUserToContacts(contactDTO.getUserId(), contactDTO.getContactId());
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/contacts/delete")
+    public ResponseEntity<?> removeUserFromContacts(@RequestBody ContactDTO contactDTO) {
+        userService.removeUserFromContacts(contactDTO.getUserId(), contactDTO.getContactId());
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/contacts/findAll/{id}")
+    public ResponseEntity<List<UserDTO>> getAllContacts(@PathVariable Long id) {
+        List<User> users = userService.findAllContactsById(id);
+        List<UserDTO> usersDTO = new ArrayList<>();
+        for (var i : users) {
+            usersDTO.add(new UserDTO(i.getId(), i.getUsername(), i.getAvatar()));
+        }
+        return ResponseEntity.ok(usersDTO);
+    }
+
+    @GetMapping("/contacts/find")
+    public ResponseEntity<User> getContact(@RequestParam(name = "id1") Long userId, @RequestParam(name = "id2") Long contactId) {
+        logger.info("User id " + userId + " and contact id " + contactId);
+        User user = userService.findContactById(userId, contactId).orElseThrow(() -> new RuntimeException("Contact not found"));;
+        return ResponseEntity.ok(user);
+    }
+
+    @PostMapping("/avatar")
+    public ResponseEntity<?> changeAvatar(@RequestBody AvatarDTO avatarDTO) {
+        userService.ChangeAvatar(avatarDTO.getId(), avatarDTO.getAvatar());
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/avatar")
+    public ResponseEntity<?> changeAvatar(@RequestParam(name = "id") Long userId) {
+        User user = userService.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        String avatar = user.getAvatar();
+        return ResponseEntity.ok(avatar);
+    }
 }

@@ -9,7 +9,7 @@ import org.example.sutod_auth.Entities.UserDTO.UserRequestSignUp;
 import org.example.sutod_auth.Entities.UserDTO.UserRequestSignIn;
 import org.example.sutod_auth.Jwt.JwtCore;
 import org.example.sutod_auth.Repositories.UserRepository;
-import org.example.sutod_auth.Servies.Impl.UserService;
+import org.example.sutod_auth.Services.Impl.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
